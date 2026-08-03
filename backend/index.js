@@ -9,7 +9,19 @@ const { pushRepo } = require("./controllers/push");
 const { revertRepo } = require("./controllers/revert");
 
 yargs(hideBin(process.argv))
-.command("init", "Initialize a new repository", {}, initRepo )
+.command(
+    "init <repoName>", 
+    "Initialize a new repository",
+    (yargs) => {
+        yargs.positional("repoName", {
+            describe: "Initialize repository",
+            type: "string",
+        });
+    }, 
+    (argv) => {
+        initRepo(argv.repoName)
+    }
+)
 .command(
     "add <file>", 
     "Add repo to staging area", 
@@ -36,8 +48,8 @@ yargs(hideBin(process.argv))
         commitRepo(argv.message);
     } 
 )
-.command("push", "push commands to S3", {}, pushRepo )
-.command("pull", "pull commands from S3", {}, pullRepo )
+.command("push", "push commands to repository", {}, pushRepo )
+.command("pull", "pull commands from repository", {}, pullRepo )
 .command(
     "revert <commitID>", 
     "Revert to a specific commit", 
