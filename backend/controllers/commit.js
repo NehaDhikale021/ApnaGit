@@ -13,6 +13,7 @@ async function commitRepo(message){
         await fs.mkdir(commitDir, { recursive:true });
 
         const files = await fs.readdir(stagedPath);
+        console.log("Files in staging:", files);
         for(const file of files){
             await fs.copyFile(
                 path.join(stagedPath, file),
