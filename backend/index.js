@@ -7,6 +7,7 @@ const { commitRepo } = require("./controllers/commit");
 const { pullRepo } = require("./controllers/pull");
 const { pushRepo } = require("./controllers/push");
 const { revertRepo } = require("./controllers/revert");
+const {loginUser } = require("./controllers/login");
 
 yargs(hideBin(process.argv))
 .command(
@@ -47,6 +48,12 @@ yargs(hideBin(process.argv))
     (argv)=> {
         commitRepo(argv.message);
     } 
+)
+.command(
+    "login",
+    "Login to ApnaGit",
+    {},
+    loginUser
 )
 .command("push", "push commands to repository", {}, pushRepo )
 .command("pull", "pull commands from repository", {}, pullRepo )

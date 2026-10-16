@@ -1,13 +1,17 @@
 # Dependencies
 node_modules/
-backend/node_modules/
+**/node_modules/
 
 # Environment variables
 .env
+.env.*
+!.env.example
 
-# Logs
-*.log
+# Build output
+frontend/dist/
 
-# OS files
-.DS_Store
-Thumbs.db
+# ApnaGit local configuration and commit data
+backend/.apnagit/
+
+# Generated repository data
+git-server/repositories/

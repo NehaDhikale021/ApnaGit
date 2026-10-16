@@ -10,12 +10,17 @@ async function pushRepo() {
             "config.json"
         );
 
-        const configData = await fs.readFile(
-            configPath,
-            "utf-8"
+        const config = JSON.parse(
+            await fs.readFile(configPath, "utf-8")
         );
 
-        const config = JSON.parse(configData);
+        // Validate configuration
+        if (!config.remoteUrl || !config.repoName || !config.token) {
+            console.error(
+                "Missing remote URL, repository name, or authentication token."
+            );
+            return;
+        }
 
         const commitFolderPath = path.join(
             process.cwd(),
@@ -25,36 +30,49 @@ async function pushRepo() {
 
         const folders = await fs.readdir(commitFolderPath);
 
+        if (folders.length === 0) {
+            console.log("No commits available to push.");
+            return;
+        }
+
         const commits = [];
 
         for (const folder of folders) {
-
-            const commitPath = path.join(
+            const currentCommitPath = path.join(
                 commitFolderPath,
-                folder,
+                folder
+            );
+
+            const commitFilePath = path.join(
+                currentCommitPath,
                 "commit.json"
             );
 
-            const data = await fs.readFile(
-                commitPath,
+            const commitData = await fs.readFile(
+                commitFilePath,
                 "utf-8"
             );
 
-            const commit = JSON.parse(data);
+            const commit = JSON.parse(commitData);
 
-            // Read all files inside this commit
             const commitFiles = await fs.readdir(
-                path.join(commitFolderPath, folder)
+                currentCommitPath
             );
 
             const files = [];
 
             for (const file of commitFiles) {
+                if (file === "commit.json") {
+                    continue;
+                }
 
-                if (file === "commit.json") continue;
+                const filePath = path.join(
+                    currentCommitPath,
+                    file
+                );
 
                 const content = await fs.readFile(
-                    path.join(commitFolderPath, folder, file),
+                    filePath,
                     "utf-8"
                 );
 
@@ -71,20 +89,41 @@ async function pushRepo() {
             });
         }
 
-        console.log(commits);
+        console.log(`Pushing ${commits.length} commit(s)...`);
 
         const response = await axios.post(
             `${config.remoteUrl}/repo/push`,
             {
                 repoName: config.repoName,
                 commits
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${config.token}`
+                },
+                timeout: 30000
             }
         );
 
-        console.log(response.data);
+        console.log(
+            response.data.message || "Push completed successfully."
+        );
 
     } catch (error) {
-        console.log(error.message);
+        if (error.response) {
+            console.error(
+                "Push failed:",
+                error.response.data.message ||
+                error.response.data.error ||
+                `HTTP ${error.response.status}`
+            );
+        } else if (error.code === "ENOENT") {
+            console.error(
+                "Repository or commit directory not found. Initialize the repository and create a commit first."
+            );
+        } else {
+            console.error("Push failed:", error.message);
+        }
     }
 }
 
